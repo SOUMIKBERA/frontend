@@ -14,14 +14,14 @@ const CreateDelivery = () => {
       city: '',
       state: '',
       zipCode: '',
-      coordinates: { lat: 28.6139, lng: 77.2090 }
+      coordinates: { lat: null, lng: null }
     },
     dropAddress: {
       street: '',
       city: '',
       state: '',
       zipCode: '',
-      coordinates: { lat: 28.7041, lng: 77.1025 }
+      coordinates: { lat: null, lng: null }
     },
     customerInfo: {
       name: '',
@@ -36,6 +36,45 @@ const CreateDelivery = () => {
     notes: ''
   });
 
+  // Major Indian cities coordinates
+  const cityCoordinates = {
+    'Mumbai': { lat: 19.0760, lng: 72.8777 },
+    'Delhi': { lat: 28.7041, lng: 77.1025 },
+    'Bangalore': { lat: 12.9716, lng: 77.5946 },
+    'Hyderabad': { lat: 17.3850, lng: 78.4867 },
+    'Chennai': { lat: 13.0827, lng: 80.2707 },
+    'Kolkata': { lat: 22.5726, lng: 88.3639 },
+    'Pune': { lat: 18.5204, lng: 73.8567 },
+    'Ahmedabad': { lat: 23.0225, lng: 72.5714 },
+    'Jaipur': { lat: 26.9124, lng: 75.7873 },
+    'Surat': { lat: 21.1702, lng: 72.8311 },
+    'Lucknow': { lat: 26.8467, lng: 80.9462 },
+    'Kanpur': { lat: 26.4499, lng: 80.3319 },
+    'Nagpur': { lat: 21.1458, lng: 79.0882 },
+    'Indore': { lat: 22.7196, lng: 75.8577 },
+    'Thane': { lat: 19.2183, lng: 72.9781 },
+    'Bhopal': { lat: 23.2599, lng: 77.4126 },
+    'Visakhapatnam': { lat: 17.6868, lng: 83.2185 },
+    'Patna': { lat: 25.5941, lng: 85.1376 },
+    'Vadodara': { lat: 22.3072, lng: 73.1812 },
+    'Ghaziabad': { lat: 28.6692, lng: 77.4538 },
+    'Ludhiana': { lat: 30.9010, lng: 75.8573 },
+    'Agra': { lat: 27.1767, lng: 78.0081 },
+    'Nashik': { lat: 19.9975, lng: 73.7898 },
+    'Faridabad': { lat: 28.4089, lng: 77.3178 },
+    'Meerut': { lat: 28.9845, lng: 77.7064 },
+    'Rajkot': { lat: 22.3039, lng: 70.8022 },
+    'Varanasi': { lat: 25.3176, lng: 82.9739 },
+    'Amritsar': { lat: 31.6340, lng: 74.8723 },
+    'Ranchi': { lat: 23.3441, lng: 85.3096 },
+    'Coimbatore': { lat: 11.0168, lng: 76.9558 },
+    'Gurgaon': { lat: 28.4595, lng: 77.0266 },
+    'Noida': { lat: 28.5355, lng: 77.3910 },
+    'Kochi': { lat: 9.9312, lng: 76.2673 },
+    'Chandigarh': { lat: 30.7333, lng: 76.7794 },
+    'Guwahati': { lat: 26.1445, lng: 91.7362 }
+  };
+
   const handleChange = (section, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -46,10 +85,37 @@ const CreateDelivery = () => {
     }));
   };
 
+  const handleCitySelect = (section, city) => {
+    const coords = cityCoordinates[city];
+    if (coords) {
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          city: city,
+          coordinates: coords
+        }
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Validate coordinates exist
+    if (!formData.pickupAddress.coordinates.lat || !formData.pickupAddress.coordinates.lng) {
+      setError('Please select a pickup city from the dropdown list');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.dropAddress.coordinates.lat || !formData.dropAddress.coordinates.lng) {
+      setError('Please select a drop city from the dropdown list');
+      setLoading(false);
+      return;
+    }
 
     try {
       const submitData = {
@@ -107,15 +173,23 @@ const CreateDelivery = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City <span className="text-red-500">* (Select from list)</span>
+                  </label>
+                  <select
                     required
                     className="input-field"
                     value={formData.pickupAddress.city}
-                    onChange={(e) => handleChange('pickupAddress', 'city', e.target.value)}
-                    placeholder="New Delhi"
-                  />
+                    onChange={(e) => handleCitySelect('pickupAddress', e.target.value)}
+                  >
+                    <option value="">-- Select City --</option>
+                    {Object.keys(cityCoordinates).sort().map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-green-600 mt-1">
+                    {formData.pickupAddress.coordinates.lat && '✓ Coordinates set'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
@@ -125,7 +199,7 @@ const CreateDelivery = () => {
                     className="input-field"
                     value={formData.pickupAddress.state}
                     onChange={(e) => handleChange('pickupAddress', 'state', e.target.value)}
-                    placeholder="Delhi"
+                    placeholder="State"
                   />
                 </div>
                 <div>
@@ -159,15 +233,23 @@ const CreateDelivery = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City <span className="text-red-500">* (Select from list)</span>
+                  </label>
+                  <select
                     required
                     className="input-field"
                     value={formData.dropAddress.city}
-                    onChange={(e) => handleChange('dropAddress', 'city', e.target.value)}
-                    placeholder="Gurgaon"
-                  />
+                    onChange={(e) => handleCitySelect('dropAddress', e.target.value)}
+                  >
+                    <option value="">-- Select City --</option>
+                    {Object.keys(cityCoordinates).sort().map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-green-600 mt-1">
+                    {formData.dropAddress.coordinates.lat && '✓ Coordinates set'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
@@ -177,7 +259,7 @@ const CreateDelivery = () => {
                     className="input-field"
                     value={formData.dropAddress.state}
                     onChange={(e) => handleChange('dropAddress', 'state', e.target.value)}
-                    placeholder="Haryana"
+                    placeholder="State"
                   />
                 </div>
                 <div>
