@@ -198,6 +198,11 @@ const DeliveryDetails = () => {
               <div className="text-right">
                 <p className="text-3xl font-bold text-primary-600">₹{delivery.pricing.totalPrice}</p>
                 <p className="text-sm text-gray-500">Total Price</p>
+                {delivery.estimatedDeliveryTime && (
+                   <p className="text-xs text-gray-500 mt-1">
+                       Est. delivery: {new Date(delivery.estimatedDeliveryTime).toLocaleTimeString()}
+                   </p>
+                 )}
               </div>
             </div>
           </div>
